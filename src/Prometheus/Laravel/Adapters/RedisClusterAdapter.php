@@ -24,7 +24,6 @@ class RedisClusterAdapter implements Adapter
 
     public function __construct()
     {
-        $this->redis = new RedisCluster(null, []);
     }
 
     public static function fromExistingConnection(RedisCluster $redis): self
