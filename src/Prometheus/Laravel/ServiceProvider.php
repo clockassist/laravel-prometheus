@@ -17,7 +17,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__.'/../../../config/sentry.php', self::CONFIG_KEY);
+        $this->mergeConfigFrom(__DIR__.'/../../../config/prometheus.php', self::CONFIG_KEY);
 
     }
 
