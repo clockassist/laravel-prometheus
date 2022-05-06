@@ -27,10 +27,10 @@
   "extra": {
     "laravel": {
       "providers": [
-        "Sentry\\Laravel\\ServiceProvider"
+        "Prometheus\\Laravel\\ServiceProvider"
       ],
       "aliases": {
-        "Sentry": "Sentry\\Laravel\\Facade"
+        "Prometheus": "Prometheus\\Laravel\\Facade"
       }
     }
   },
