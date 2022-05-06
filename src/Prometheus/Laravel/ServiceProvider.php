@@ -27,27 +27,23 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             __DIR__.'/../../../config/prometheus.php' => config_path('prometheus.php'),
         ]);
 
-        $adapter = $this->buildAdapter();
-
-        if ($adapter !== null) {
-            $this->app->bind(
-                'prometheus',
-                new CollectorRegistry(
-                    storageAdapter: $adapter,
-                    registerDefaultMetrics: false
-                )
-            );
-        }
+        $this->app->bind(
+            'prometheus',
+            new CollectorRegistry(
+                storageAdapter: $this->buildAdapter(),
+                registerDefaultMetrics: false
+            )
+        );
     }
 
-    private function buildAdapter(): ?Adapter
+    private function buildAdapter(): Adapter
     {
         $config = $this->app['config'][self::CONFIG_KEY] ?? [];
 
         $adapter = $config['adapter'] ?? null;
 
         if ($adapter === null) {
-            return null;
+            return new InMemory();
         }
 
         if ($adapter === 'memory') {
