@@ -2,6 +2,7 @@
 
 namespace Prometheus\Laravel;
 
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Redis\Connections\PhpRedisConnection;
 use Illuminate\Support\Facades\Redis as RedisFacade;
 use Prometheus\CollectorRegistry;
@@ -27,13 +28,12 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             __DIR__.'/../../../config/prometheus.php' => config_path('prometheus.php'),
         ]);
 
-        $this->app->bind(
-            'prometheus',
-            new CollectorRegistry(
+        $this->app->bind('prometheus', function () {
+            return new CollectorRegistry(
                 storageAdapter: $this->buildAdapter(),
                 registerDefaultMetrics: false
-            )
-        );
+            );
+        });
     }
 
     private function buildAdapter(): Adapter
