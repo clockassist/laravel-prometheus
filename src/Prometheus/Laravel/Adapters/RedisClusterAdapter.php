@@ -11,9 +11,7 @@ use Prometheus\Math;
 use Prometheus\MetricFamilySamples;
 use Prometheus\Storage\Adapter;
 use Prometheus\Summary;
-use Redis;
 use RedisCluster;
-use RedisException;
 use RuntimeException;
 
 class RedisClusterAdapter implements Adapter
@@ -33,22 +31,16 @@ class RedisClusterAdapter implements Adapter
 
     private array $options;
 
-    private Redis|RedisCluster $redis;
-
-    private bool $connectionInitialized = false;
+    private RedisCluster $redis;
 
     public function __construct(array $options = [])
     {
         $this->options = array_merge(self::$defaultOptions, $options);
-        $this->redis = new Redis();
+        $this->redis = new RedisCluster();
     }
 
-    public static function fromExistingConnection(Redis|RedisCluster $redis): self
+    public static function fromExistingConnection(RedisCluster $redis): self
     {
-        if ($redis instanceof Redis && ! $redis->isConnected()) {
-            throw new StorageException('Connection to Redis server not established');
-        }
-
         $self = new self();
         $self->connectionInitialized = true;
         $self->redis = $redis;
@@ -80,11 +72,9 @@ class RedisClusterAdapter implements Adapter
      */
     public function wipeStorage(): void
     {
-        $this->ensureOpenConnection();
-
         $searchPattern = "";
 
-        $globalPrefix = $this->redis->getOption(Redis::OPT_PREFIX);
+        $globalPrefix = $this->redis->getOption(RedisCluster::OPT_PREFIX);
         // @phpstan-ignore-next-line false positive, phpstan thinks getOptions returns int
         if (is_string($globalPrefix)) {
             $searchPattern .= $globalPrefix;
@@ -143,7 +133,6 @@ LUA
      */
     public function collect(): array
     {
-        $this->ensureOpenConnection();
         $metrics = $this->collectHistograms();
         $metrics = array_merge($metrics, $this->collectGauges());
         $metrics = array_merge($metrics, $this->collectCounters());
@@ -159,59 +148,8 @@ LUA
     /**
      * @throws StorageException
      */
-    private function ensureOpenConnection(): void
-    {
-        if ($this->connectionInitialized === true) {
-            return;
-        }
-
-        if ($this->redis instanceof RedisCluster) {
-            return;
-        }
-
-        $this->connectToServer();
-
-        if ($this->options['password'] !== null) {
-            $this->redis->auth($this->options['password']);
-        }
-
-        if (isset($this->options['database'])) {
-            $this->redis->select($this->options['database']);
-        }
-
-        $this->redis->setOption(Redis::OPT_READ_TIMEOUT, $this->options['read_timeout']);
-    }
-
-    /**
-     * @throws StorageException
-     */
-    private function connectToServer(): void
-    {
-        try {
-            if ($this->options['persistent_connections'] !== false) {
-                $connection_successful = $this->redis->pconnect(
-                    $this->options['host'],
-                    (int) $this->options['port'],
-                    (float) $this->options['timeout']
-                );
-            } else {
-                $connection_successful = $this->redis->connect($this->options['host'], (int) $this->options['port'],
-                    (float) $this->options['timeout']);
-            }
-            if (! $connection_successful) {
-                throw new StorageException("Can't connect to Redis server", 0);
-            }
-        } catch (RedisException $e) {
-            throw new StorageException("Can't connect to Redis server", 0, $e);
-        }
-    }
-
-    /**
-     * @throws StorageException
-     */
     public function updateHistogram(array $data): void
     {
-        $this->ensureOpenConnection();
         $bucketToIncrease = '+Inf';
         foreach ($data['buckets'] as $bucket) {
             if ($data['value'] <= $bucket) {
@@ -251,8 +189,6 @@ LUA
      */
     public function updateSummary(array $data): void
     {
-        $this->ensureOpenConnection();
-
         // store meta
         $summaryKey = self::$prefix.Summary::TYPE.self::PROMETHEUS_METRIC_KEYS_SUFFIX;
         $metaKey = $summaryKey.':'.$this->metaKey($data);
@@ -284,7 +220,6 @@ LUA
      */
     public function updateGauge(array $data): void
     {
-        $this->ensureOpenConnection();
         $metaData = $data;
         unset($metaData['value'], $metaData['labelValues'], $metaData['command']);
         $this->redis->eval(
@@ -322,7 +257,6 @@ LUA
      */
     public function updateCounter(array $data): void
     {
-        $this->ensureOpenConnection();
         $metaData = $data;
         unset($metaData['value'], $metaData['labelValues'], $metaData['command']);
         $this->redis->eval(
@@ -346,7 +280,6 @@ LUA
             2
         );
     }
-
 
     /**
      * @param mixed[] $data
