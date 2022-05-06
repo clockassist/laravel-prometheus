@@ -18,39 +18,21 @@ class RedisClusterAdapter implements Adapter
 {
     const PROMETHEUS_METRIC_KEYS_SUFFIX = '_METRIC_KEYS';
 
-    private static array $defaultOptions = [
-        'host' => '127.0.0.1',
-        'port' => 6379,
-        'timeout' => 0.1,
-        'read_timeout' => '10',
-        'persistent_connections' => false,
-        'password' => null,
-    ];
-
     private static string $prefix = '{PROMETHEUS}_';
-
-    private array $options;
 
     private RedisCluster $redis;
 
-    public function __construct(array $options = [])
+    public function __construct()
     {
-        $this->options = array_merge(self::$defaultOptions, $options);
         $this->redis = new RedisCluster();
     }
 
     public static function fromExistingConnection(RedisCluster $redis): self
     {
         $self = new self();
-        $self->connectionInitialized = true;
         $self->redis = $redis;
 
         return $self;
-    }
-
-    public static function setDefaultOptions(array $options): void
-    {
-        self::$defaultOptions = array_merge(self::$defaultOptions, $options);
     }
 
     public static function setPrefix(string $prefix): void
