@@ -1,0 +1,38 @@
+{
+  "name": "clockassist/laravel-prometheus",
+  "type": "library",
+  "description": "Laravel package for easily using the promphp/prometheus_client_php registry",
+  "keywords": [
+    "prometheus",
+    "metrics"
+  ],
+  "homepage": "https://www.clockassist.com",
+  "authors": [
+    {
+      "name": "ClockAssist BV",
+      "email": "info@clockassist.com"
+    }
+  ],
+  "require": {
+    "php": "^8.1",
+    "illuminate/support": "^9.0",
+    "illuminate/redis": "^9.0",
+    "promphp/prometheus_client_php": "^2.6"
+  },
+  "autoload": {
+    "psr-0": {
+      "Prometheus\\Laravel\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Sentry\\Laravel\\ServiceProvider"
+      ],
+      "aliases": {
+        "Sentry": "Sentry\\Laravel\\Facade"
+      }
+    }
+  },
+  "prefer-stable": true
+}
