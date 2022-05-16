@@ -81,7 +81,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             'host' => $database['host'] ?? null,
             'port' => $database['port'] ?? null,
             'password' => $database['password'] ?? null,
-            'database' => $database['database'] ?? null,
+            'database' => ($db = $database['database'] ?? null) ? (int) $db : null,
         ]);
     }
 }
