@@ -2,14 +2,13 @@
 
 namespace Prometheus\Laravel;
 
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Redis\Connections\PhpRedisConnection;
 use Illuminate\Support\Facades\Redis as RedisFacade;
 use Prometheus\CollectorRegistry;
 use Prometheus\Laravel\Adapters\RedisClusterAdapter;
+use Prometheus\Laravel\Adapters\RedisWithoutSummariesAdapter;
 use Prometheus\Storage\Adapter;
 use Prometheus\Storage\InMemory;
-use Prometheus\Storage\Redis as RedisAdapter;
 use RuntimeException;
 
 class ServiceProvider extends \Illuminate\Support\ServiceProvider
@@ -57,7 +56,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         throw new RuntimeException('Unknown adapter: '.$adapter);
     }
 
-    private function buildRedisAdapter(string $connectionName): RedisAdapter|RedisClusterAdapter
+    private function buildRedisAdapter(string $connectionName): RedisWithoutSummariesAdapter|RedisClusterAdapter
     {
         $connection = RedisFacade::connection($connectionName);
 
@@ -65,7 +64,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             $client = $connection->client();
 
             if ($client instanceof \Redis) {
-                return RedisAdapter::fromExistingConnection($client);
+                return RedisWithoutSummariesAdapter::fromExistingConnection($client);
             }
 
             if ($client instanceof \RedisCluster) {
@@ -77,7 +76,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 
         $database = $this->app['config']['database']['redis'][$connectionName] ?? [];
 
-        return new RedisAdapter([
+        return new RedisWithoutSummariesAdapter([
             'host' => $database['host'] ?? null,
             'port' => $database['port'] ?? null,
             'password' => $database['password'] ?? null,
