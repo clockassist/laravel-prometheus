@@ -15,8 +15,8 @@
   ],
   "require": {
     "php": "^8.1",
-    "illuminate/support": "^9.0",
-    "illuminate/redis": "^9.0",
+    "illuminate/support": "^9.0|^10",
+    "illuminate/redis": "^9.0|^10",
     "promphp/prometheus_client_php": "^2.6"
   },
   "autoload": {
